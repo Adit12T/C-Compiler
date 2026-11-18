@@ -27,7 +27,7 @@ LEX = flex
 # compile everything for debugger?
 #
 #yes
-CFLAGS = -g
+CFLAGS = -g -std=gnu11
 #no
 #CFLAGS =
 

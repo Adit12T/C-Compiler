@@ -47,6 +47,8 @@ The code no longer built on current toolchains. I fixed that without changing wh
 - Two calls passed `NULL` where an enum was expected, which GCC 14 treats as an error; they now pass
   the matching enum values (`NO_QUAL`, `PROTOTYPE`), which have the same value.
 - Added the missing `<string.h>` include and a prototype for `is_ptr`.
+- GCC 15 compiles C23 by default, where an empty parameter list means "no arguments"; the skeleton's
+  callback types rely on the older meaning, so the Makefiles now select `-std=gnu11`.
 
 ## Known limitations
 
