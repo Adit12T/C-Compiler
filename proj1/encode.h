@@ -1,5 +1,5 @@
-#ifndef TREE_H
-#define TREE_H
+#ifndef ENCODE_H
+#define ENCODE_H
 
 #include "types.h"
 #include "symtab.h"

@@ -14,6 +14,8 @@
 #include "tree.h"
 #include "encode.h"
 #include BACKEND_HEADER_FILE
+#include <string.h>
+BOOLEAN is_ptr(DECL_ND_PTR head);
 
     int yylex();
     int yyerror(char *s);
@@ -596,12 +598,12 @@ TYPE mk_type(BUCKET_PTR bucket, DECL_ND_PTR head) {
 			type = ty_build_array(type, DIM_PRESENT, head->arr_size);
 		}
 		if (head->type == PTR_DECL) {
-			type = ty_build_ptr(type, NULL);
+			type = ty_build_ptr(type, NO_QUAL);
 		}
 		if (head->type == FUNC_DECL) {
 			if (head->params == NULL) {
 				//Delete this --- 
-				type = ty_build_func(type, NULL, NULL);
+				type = ty_build_func(type, PROTOTYPE, NULL);
 			}
 			else {
 				//params were set in tree when making fuction node

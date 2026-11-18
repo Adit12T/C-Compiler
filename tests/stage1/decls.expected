@@ -1,0 +1,3 @@
+signed int
+<no qual> pointer to signed int
+array of 10 signed int

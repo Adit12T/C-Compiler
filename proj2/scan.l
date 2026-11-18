@@ -27,7 +27,7 @@ int convert_int_const(INT_TAG tag);
 int escchar(char *str);
 int digit(char c);
 
-YYSTYPE yylval;
+extern YYSTYPE yylval;  /* defined by the bison parser */
 /* int yylineno = 1; */
 
 %}
