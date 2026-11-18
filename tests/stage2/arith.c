@@ -1,2 +1,7 @@
 int x;
-int main(){ x = 3 + 4 * 2; return x; }
+int y;
+void compute()
+{
+    x = 3 + 4 * 2;
+    y = (x - 1) / 2 % 3;
+}

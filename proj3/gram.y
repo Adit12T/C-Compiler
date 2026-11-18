@@ -61,7 +61,7 @@ CONTROL_ND_PTR top = NULL;
 %type  <y_param> parameter_type_list parameter_declaration parameter_list;
 %type <y_expr> primary_expr expr_opt assignment_expr unary_expr multiplicative_expr 
 %type <y_expr> additive_expr cast_expr relational_expr shift_expr equality_expr
-%type <y_expr> expr postfix_expr 
+%type <y_expr> expr postfix_expr argument_expr_list argument_expr_list_opt 
 %token <y_string> IDENTIFIER
 %token <y_int> INT_CONSTANT
 %type <y_int> assignment_operator unary_operator
@@ -108,7 +108,7 @@ primary_expr
 										val.v.real_val = $1;
 										$$ = exp_mk_real(val);
 									}
-	| STRING_LITERAL
+	| STRING_LITERAL				{ $$ = exp_mk_string($1); }
 	| '(' expr ')'					{ $$ = exp_mk_paren($2);}
 	;
 
@@ -127,6 +127,9 @@ postfix_expr
 															if (expr == NULL) {
 																error("`%s' is undefined", st_get_id_str($1->left->val.v.st_id_val));
 															}
+															else {
+																expr->right = $3;	/* argument list */
+															}
 															$$ = expr;
 															}
 														}
@@ -137,13 +140,13 @@ postfix_expr
 	;
 
 argument_expr_list_opt
-	: /* null derive */
-	| argument_expr_list
+	: /* null derive */				{ $$ = NULL; }
+	| argument_expr_list				{ $$ = $1; }
 	;
 
 argument_expr_list
-	: assignment_expr
-	| argument_expr_list ',' assignment_expr
+	: assignment_expr					{ $$ = exp_mk_arg_list(NULL, $1); }
+	| argument_expr_list ',' assignment_expr		{ $$ = exp_mk_arg_list($1, $3); }
 	;
 
 unary_expr
@@ -892,8 +895,58 @@ int yyerror(char *s)
         return 0;  /* never reached */
 }
 
+/* Size in bytes an argument of this type takes in the argument list, after promotion. */
+static int arg_size(TYPETAG tag) {
+	return (tag == TYDOUBLE || tag == TYFLOAT || tag == TYLONGDOUBLE) ? 8 : 4;
+}
+
+/* Calls a function: allocates the argument list, evaluates and loads each argument
+   in order (char and short promote to int, float to double), then makes the call. */
+static void eval_call(EXPR_ND_PTR expr) {
+	if (ty_query(expr->type) != TYFUNC) {
+		error("expression not of function type");
+		return;
+	}
+	int total = 0;
+	EXPR_ND_PTR arg;
+	for (arg = expr->right; arg != NULL; arg = arg->right) {
+		if (arg->left != NULL) {
+			total += arg_size(ty_query(arg->left->type));
+		}
+	}
+	b_alloc_arglist(total);
+	for (arg = expr->right; arg != NULL; arg = arg->right) {
+		if (arg->left == NULL) {
+			continue;
+		}
+		eval_expr(arg->left);
+		TYPETAG tag = ty_query(arg->left->type);
+		if (tag == TYSIGNEDCHAR || tag == TYUNSIGNEDCHAR || tag == TYSIGNEDSHORTINT || tag == TYUNSIGNEDSHORTINT) {
+			b_convert(tag, TYSIGNEDINT);
+			tag = TYSIGNEDINT;
+		}
+		else if (tag == TYFLOAT) {
+			b_convert(tag, TYDOUBLE);
+			tag = TYDOUBLE;
+		}
+		b_load_arg(tag);
+	}
+	PARAM_LIST plist;
+	PARAMSTYLE pstyle;
+	TYPE type = ty_query_func(expr->type, &pstyle, &plist);
+	TYPETAG tag = ty_query(type);
+	b_funcall_by_name(st_get_id_str(expr->val.v.st_id_val), tag);
+	if (tag == TYVOID) {
+		pop_on = FALSE;
+	}
+}
+
 void eval_expr(EXPR_ND_PTR expr) {
 	if (expr == NULL) {
+		return;
+	}
+	if (expr->op_type == FUNC_OP) {
+		eval_call(expr);
 		return;
 	}
 	eval_expr(expr->left);
@@ -909,6 +962,9 @@ void eval_expr(EXPR_ND_PTR expr) {
 					break;
 				case VAL_ST_ID:
 					b_push_ext_addr(st_get_id_str(expr->val.v.st_id_val));
+					break;
+				case VAL_STRING:
+					b_push_const_string(expr->val.v.str_val);
 					break;
 				default:
 					break;

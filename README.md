@@ -52,11 +52,19 @@ The code no longer built on current toolchains. I fixed that without changing wh
 
 ## Added in 2026
 
-Stage 3 parsed `++`, `--`, `<=` and `>=` but generated no code for them, so `i++` did nothing and a
-loop using it never ended. They now work: `exp_mk_inc_dec` in `tree.c` builds the node from the
-variable's address, and the code generator calls the back end's `b_inc_dec` and `B_LE`/`B_GE`
-routines. Tests in `tests/stage3/incdec.c` cover pre- and post-increment, decrement and both
-comparisons.
+Writing the tests showed that stage 3 parsed several constructs without generating code for them.
+These now work:
+
+- **`++` and `--`** (pre and post). Before, `i++` did nothing, so a loop using it never ended.
+  `exp_mk_inc_dec` in `tree.c` builds the node from the variable's address and the code generator
+  calls the back end's `b_inc_dec`.
+- **`<=` and `>=`**, through the back end's `B_LE` and `B_GE`.
+- **Function-call arguments.** Calls used to pass nothing. Arguments are now evaluated in order,
+  promoted (`char`/`short` to `int`, `float` to `double`) and loaded with `b_load_arg`, so the
+  compiled code can call C library functions such as `printf`.
+- **String literals**, emitted to `.rodata` with `b_push_const_string`.
+
+`tests/stage3/incdec.c` and `tests/stage3/calls.c` cover them.
 
 ## Known limitations
 

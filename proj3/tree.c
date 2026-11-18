@@ -404,6 +404,37 @@ EXPR_ND_PTR exp_mk_inc_dec(int idop, EXPR_ND_PTR expr) {
 	return exp_node;
 }
 
+EXPR_ND_PTR exp_mk_string(char *str) {
+	EXPR_ND_PTR exp_node = (EXPR_ND_PTR) malloc(sizeof(EXPR_ND));
+	exp_node->type = ty_build_ptr(ty_build_basic(TYSIGNEDCHAR), NO_QUAL);
+	exp_node->expr_type = LEAF;
+	exp_node->op_type = NO_OP;
+	exp_node->val.tag = VAL_STRING;
+	exp_node->val.v.str_val = str;
+	exp_node->tag = VAL_STRING;
+	exp_node->left = NULL;
+	exp_node->right = NULL;
+	return exp_node;
+}
+
+EXPR_ND_PTR exp_mk_arg_list(EXPR_ND_PTR list, EXPR_ND_PTR arg) {
+	EXPR_ND_PTR node = (EXPR_ND_PTR) malloc(sizeof(EXPR_ND));
+	node->type = arg == NULL ? NULL : arg->type;
+	node->expr_type = UNARY;
+	node->op_type = ARG_OP;
+	node->left = arg;
+	node->right = NULL;
+	if (list == NULL) {
+		return node;
+	}
+	EXPR_ND_PTR last = list;
+	while (last->right != NULL) {
+		last = last->right;
+	}
+	last->right = node;
+	return list;
+}
+
 EXPR_ND_PTR exp_mk_paren(EXPR_ND_PTR expr) {
 	EXPR_ND_PTR exp_node = (EXPR_ND_PTR) malloc(sizeof(EXPR_ND));
 	exp_node->type = expr->type;

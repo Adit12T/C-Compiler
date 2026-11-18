@@ -6,7 +6,7 @@
 #include "bucket.h"
 
 typedef enum {
-	VAL_INT, VAL_DOUBLE, VAL_ST_ID
+	VAL_INT, VAL_DOUBLE, VAL_ST_ID, VAL_STRING
 } VAL_TAG;
 
 typedef struct val {
@@ -15,6 +15,7 @@ typedef struct val {
 		int int_val;
 		double real_val;
 		ST_ID st_id_val;
+		char *str_val;
 	} v;
 } VAL;
 
@@ -34,7 +35,7 @@ typedef enum {ERROR_OP, NO_OP, FUNC_OP, PAREN_OP, DEREF_OP, CONV_OP, ASSIGN_OP,
 	PLUS_OP, MUL_OP, DIV_OP, 
 	EQL_OP, NEQL_OP,
 	MINUS_OP, NEGATE_OP, MOD_OP, LESS_OP, GREATER_OP,
-	LESS_EQL_OP, GREATER_EQL_OP, INC_DEC_OP} OP_TYPE;
+	LESS_EQL_OP, GREATER_EQL_OP, INC_DEC_OP, ARG_OP} OP_TYPE;
 
 typedef struct expr_node {
 	EXPR_TYPE expr_type;
@@ -93,6 +94,10 @@ extern EXPR_ND_PTR exp_mk_binary_op(OP_TYPE op_type, EXPR_ND_PTR left, EXPR_ND_P
 extern EXPR_ND_PTR mk_exp_unary_op(OP_TYPE op_type, EXPR_ND_PTR expr);
 /* ++ and --: idop is a B_INC_DEC_OP; the operand must be an l-value. */
 extern EXPR_ND_PTR exp_mk_inc_dec(int idop, EXPR_ND_PTR expr);
+/* A string literal: a pointer to its first character. */
+extern EXPR_ND_PTR exp_mk_string(char *str);
+/* Appends arg to a call's argument list (ARG_OP nodes: left = argument, right = next). */
+extern EXPR_ND_PTR exp_mk_arg_list(EXPR_ND_PTR list, EXPR_ND_PTR arg);
 extern EXPR_ND_PTR exp_mk_func_op(VAL val);
 
 extern CONTROL_ND_PTR push_to_control_stack(CONTROL_ND_PTR top, CONTROL_TAG tag, char *label);
