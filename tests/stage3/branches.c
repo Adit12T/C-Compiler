@@ -5,10 +5,12 @@ int main()
 {
     a = 7;
     b = 3;
-    if (a > b && b != 0)
+    if (a > b)
         printf("max %d\n", a);
-    if (a < b || b == 3)
-        printf("or ok\n");
+    else
+        printf("max %d\n", b);
+    if (a != b)
+        printf("differ\n");
     a = a % b;
     printf("mod %d\n", a);
     return 0;

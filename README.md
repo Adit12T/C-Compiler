@@ -50,12 +50,22 @@ The code no longer built on current toolchains. I fixed that without changing wh
 - GCC 15 compiles C23 by default, where an empty parameter list means "no arguments"; the skeleton's
   callback types rely on the older meaning, so the Makefiles now select `-std=gnu11`.
 
+## Added in 2026
+
+Stage 3 parsed `++`, `--`, `<=` and `>=` but generated no code for them, so `i++` did nothing and a
+loop using it never ended. They now work: `exp_mk_inc_dec` in `tree.c` builds the node from the
+variable's address, and the code generator calls the back end's `b_inc_dec` and `B_LE`/`B_GE`
+routines. Tests in `tests/stage3/incdec.c` cover pre- and post-increment, decrement and both
+comparisons.
+
 ## Known limitations
 
 This is coursework, not a production compiler:
 
 - Variables declared inside a function are stored as globals, so recursion doesn't work.
 - `double` constants inside function bodies stop the compiler with an internal error.
+- `&&` and `||` are parsed but not compiled (they would need short-circuit jumps).
+- `++` and `--` work on numeric variables, not pointers.
 - Only the 32-bit x86 target is supported.
 
 ## License

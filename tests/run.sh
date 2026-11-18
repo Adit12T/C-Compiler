@@ -20,7 +20,8 @@ for stage in 2 3; do
     name=${src%.c}
     if ! ./proj$stage/pcc3 < "$src" > "$work/out.s" 2> "$work/err"; then report bad "$src" "$(head -1 "$work/err")"; continue; fi
     if ! gcc -m32 -no-pie "$work/out.s" -o "$work/prog" 2> "$work/err"; then report bad "$src" "link: $(head -1 "$work/err")"; continue; fi
-    "$work/prog" > "$work/actual"; code=$?
+    timeout 10 "$work/prog" > "$work/actual"; code=$?
+    if [ "$code" = 124 ]; then report bad "$src" "timed out"; continue; fi
     if [ -f "$name.expected" ] && ! diff -u "$name.expected" "$work/actual" > "$work/diff"; then report bad "$src" "output differs"; cat "$work/diff"; continue; fi
     if [ -f "$name.exitcode" ] && [ "$code" != "$(cat "$name.exitcode")" ]; then report bad "$src" "exit code $code"; continue; fi
     report ok "$src"

@@ -33,7 +33,8 @@ typedef enum {LEAF, UNARY, BINARY} EXPR_TYPE;
 typedef enum {ERROR_OP, NO_OP, FUNC_OP, PAREN_OP, DEREF_OP, CONV_OP, ASSIGN_OP, 
 	PLUS_OP, MUL_OP, DIV_OP, 
 	EQL_OP, NEQL_OP,
-	MINUS_OP, NEGATE_OP, MOD_OP, LESS_OP, GREATER_OP} OP_TYPE;
+	MINUS_OP, NEGATE_OP, MOD_OP, LESS_OP, GREATER_OP,
+	LESS_EQL_OP, GREATER_EQL_OP, INC_DEC_OP} OP_TYPE;
 
 typedef struct expr_node {
 	EXPR_TYPE expr_type;
@@ -90,6 +91,8 @@ extern EXPR_ND_PTR exp_mk_paren(EXPR_ND_PTR expr);
 extern EXPR_ND_PTR exp_mk_assign(EXPR_ND_PTR left, EXPR_ND_PTR right);
 extern EXPR_ND_PTR exp_mk_binary_op(OP_TYPE op_type, EXPR_ND_PTR left, EXPR_ND_PTR right);
 extern EXPR_ND_PTR mk_exp_unary_op(OP_TYPE op_type, EXPR_ND_PTR expr);
+/* ++ and --: idop is a B_INC_DEC_OP; the operand must be an l-value. */
+extern EXPR_ND_PTR exp_mk_inc_dec(int idop, EXPR_ND_PTR expr);
 extern EXPR_ND_PTR exp_mk_func_op(VAL val);
 
 extern CONTROL_ND_PTR push_to_control_stack(CONTROL_ND_PTR top, CONTROL_TAG tag, char *label);

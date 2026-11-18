@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "tree.h"
+#include "message.h"
 
 DECL_ND_PTR tr_insert_id(ST_ID id) {
 	DECL_ND_PTR head = (DECL_ND_PTR) malloc (sizeof(DECL_ND));	
@@ -230,6 +231,7 @@ EXPR_ND_PTR exp_mk_binary_op(OP_TYPE op_type, EXPR_ND_PTR left, EXPR_ND_PTR righ
 		exp_node->right = conv_node;
 	}
 	if (op_type == LESS_OP || op_type == GREATER_OP
+		|| op_type == LESS_EQL_OP || op_type == GREATER_EQL_OP
 		|| op_type == EQL_OP || op_type == NEQL_OP) {
 		exp_node->right_type = exp_node->type;
 		exp_node->type = build_base(update_bucket(NULL, INT_SPEC, NULL));
@@ -377,6 +379,27 @@ EXPR_ND_PTR mk_exp_unary_op(OP_TYPE op_type, EXPR_ND_PTR expr) {
 	exp_node->expr_type = UNARY;
 	exp_node->op_type = op_type;
 	exp_node->left = expr;
+	exp_node->right = NULL;
+	return exp_node;
+}
+
+EXPR_ND_PTR exp_mk_inc_dec(int idop, EXPR_ND_PTR expr) {
+	if (expr == NULL) {
+		return NULL;
+	}
+	if (expr->op_type != DEREF_OP) {
+		error("operand of ++ or -- is not an l-value");
+		return expr;
+	}
+	EXPR_ND_PTR exp_node = (EXPR_ND_PTR) malloc(sizeof(EXPR_ND));
+	exp_node->type = expr->type;
+	exp_node->right_type = expr->type;
+	exp_node->expr_type = UNARY;
+	exp_node->op_type = INC_DEC_OP;
+	exp_node->val.tag = VAL_INT;
+	exp_node->val.v.int_val = idop;
+	exp_node->tag = VAL_INT;
+	exp_node->left = expr->left;	/* the variable's address, not its value */
 	exp_node->right = NULL;
 	return exp_node;
 }

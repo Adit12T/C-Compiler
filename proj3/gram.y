@@ -132,8 +132,8 @@ postfix_expr
 														}
 	| postfix_expr '.' identifier
 	| postfix_expr PTR_OP identifier
-	| postfix_expr INC_OP
-	| postfix_expr DEC_OP
+	| postfix_expr INC_OP				{ $$ = exp_mk_inc_dec(B_POST_INC, $1); }
+	| postfix_expr DEC_OP				{ $$ = exp_mk_inc_dec(B_POST_DEC, $1); }
 	;
 
 argument_expr_list_opt
@@ -148,8 +148,8 @@ argument_expr_list
 
 unary_expr
 	: postfix_expr
-	| INC_OP unary_expr
-	| DEC_OP unary_expr
+	| INC_OP unary_expr				{ $$ = exp_mk_inc_dec(B_PRE_INC, $2); }
+	| DEC_OP unary_expr				{ $$ = exp_mk_inc_dec(B_PRE_DEC, $2); }
 	| unary_operator cast_expr		{
 										switch($1) {
 											case 1:
@@ -199,8 +199,8 @@ relational_expr
 	: shift_expr
 	| relational_expr '<' shift_expr				{ $$ = exp_mk_binary_op(LESS_OP, $1, $3);	}
 	| relational_expr '>' shift_expr				{ $$ = exp_mk_binary_op(GREATER_OP, $1, $3);}
-	| relational_expr LE_OP shift_expr
-	| relational_expr GE_OP shift_expr
+	| relational_expr LE_OP shift_expr			{ $$ = exp_mk_binary_op(LESS_EQL_OP, $1, $3); }
+	| relational_expr GE_OP shift_expr			{ $$ = exp_mk_binary_op(GREATER_EQL_OP, $1, $3); }
 	;
 
 equality_expr
@@ -931,6 +931,15 @@ void eval_expr(EXPR_ND_PTR expr) {
 				case NEGATE_OP:
 					b_negate(ty_query(expr->type));
 					break;
+				case INC_DEC_OP: {
+					TYPETAG tag = ty_query(expr->type);
+					if (tag == TYPTR || tag == TYFUNC || tag == TYARRAY) {
+						error("++ and -- are supported on numeric variables only");
+						break;
+					}
+					b_inc_dec(tag, (B_INC_DEC_OP) expr->val.v.int_val, 1);
+					break;
+				}
 				case FUNC_OP:
 					b_alloc_arglist(0);
 					if (ty_query(expr->type) != TYFUNC) {
@@ -976,6 +985,12 @@ void eval_expr(EXPR_ND_PTR expr) {
 					break;
 				case GREATER_OP:
 					b_arith_rel_op(B_GT, ty_query(expr->right_type));
+					break;
+				case LESS_EQL_OP:
+					b_arith_rel_op(B_LE, ty_query(expr->right_type));
+					break;
+				case GREATER_EQL_OP:
+					b_arith_rel_op(B_GE, ty_query(expr->right_type));
 					break;
 				case MOD_OP:
 					b_arith_rel_op(B_MOD, ty_query(expr->type));
